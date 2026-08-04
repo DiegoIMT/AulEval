@@ -1,0 +1,24 @@
+.student-banner {
+  max-width: 900px;
+  margin: 0 auto 16px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--green);
+  background: var(--green2);
+  border: 1px solid #c8ded5;
+  border-radius: 10px;
+}
+
+.student-banner span {
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.student-banner p { margin: 0; font-size: 13px; }
+.student-only .tabs { display: none; }
+.student-only main { padding-top: 28px; }
+.student-only .topbar { justify-content: center; }

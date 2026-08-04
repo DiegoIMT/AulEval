@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Creador de evaluaciones escolares con calificación y exportación de resultados.">
+  <title>AulaEval | Creador de evaluaciones</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="student-mode.css">
+  <link rel="stylesheet" href="supabase-ui.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Inicio de AulaEval"><span>AE</span>AulaEval</a>
+    <nav class="tabs" aria-label="Secciones de la aplicación">
+      <button class="tab active" data-view="builder">Crear</button>
+      <button class="tab" data-view="exam">Responder</button>
+      <button class="tab" data-view="results">Resultados <span id="resultCount" class="badge">0</span></button>
+    </nav>
+    <button id="accountBtn" class="btn ghost account-btn">Configurar acceso</button>
+  </header>
+
+  <main>
+    <section id="builderView" class="view active">
+      <section class="exam-manager card">
+        <div><p class="eyebrow">Evaluación activa</p><select id="examSelector" aria-label="Seleccionar evaluación"><option value="">Nueva evaluación</option></select></div>
+        <div class="action-row"><button id="newExamBtn" class="btn secondary">+ Nueva evaluación</button><button id="syncExamsBtn" class="btn ghost">Actualizar desde Supabase</button></div>
+      </section>
+      <div class="hero">
+        <div>
+          <p class="eyebrow">Evaluaciones sin complicaciones</p>
+          <h1>Convierte un documento en una evaluación digital.</h1>
+          <p class="lead">Pega el contenido, revisa las preguntas detectadas y compártela desde GitHub Pages.</p>
+        </div>
+        <div class="steps" aria-label="Proceso"><span><b>1</b> Pega</span><i></i><span><b>2</b> Revisa</span><i></i><span><b>3</b> Publica</span></div>
+      </div>
+
+      <div class="builder-grid">
+        <section class="card import-card">
+          <div class="card-title"><div><p class="eyebrow">Importar</p><h2>Contenido del documento</h2></div><button id="sampleBtn" class="btn ghost">Usar ejemplo</button></div>
+          <label for="sourceText">Pega aquí el texto de Word, PDF o cualquier documento</label>
+          <textarea id="sourceText" rows="18" placeholder="DOCUMENTO 001&#10;Evaluación Diagnóstica&#10;Física&#10;&#10;Nombre: ______&#10;&#10;SECCIÓN I&#10;Conocimientos Matemáticos&#10;1. Resuelve: 35 + 47 =&#10;&#10;2. ¿Cuál es...?&#10;a) Opción uno&#10;b) Opción dos"></textarea>
+          <div class="hint"><span>✦</span><p><strong>Detección inteligente:</strong> reconoce encabezados, secciones, preguntas numeradas y opciones a), b), c)... Podrás corregir todo después.</p></div>
+          <button id="parseBtn" class="btn primary full">Generar evaluación <span>→</span></button>
+        </section>
+
+        <aside class="card tips-card">
+          <p class="eyebrow">Antes de empezar</p><h2>Cómo preparar el texto</h2>
+          <ol class="tip-list">
+            <li><span>01</span><div><strong>Numera las preguntas</strong><p>Usa 1., 2., 3. para separar cada reactivo.</p></div></li>
+            <li><span>02</span><div><strong>Escribe las opciones</strong><p>Usa a), b), c) y d) para opción múltiple.</p></div></li>
+            <li><span>03</span><div><strong>Separa por secciones</strong><p>Escribe “SECCIÓN I” seguido de su nombre.</p></div></li>
+          </ol>
+          <div class="privacy"><span>✓</span><div><strong>Tus datos son privados</strong><p>Todo se guarda únicamente en este navegador. No enviamos información a ningún servidor.</p></div></div>
+        </aside>
+      </div>
+
+      <section id="editor" class="card editor hidden">
+        <div class="card-title"><div><p class="eyebrow">Revisar</p><h2>Editor de evaluación</h2></div><button id="addQuestionBtn" class="btn ghost">+ Agregar pregunta</button></div>
+        <div class="meta-grid">
+          <label>Título<input id="examTitle" value="Evaluación diagnóstica"></label>
+          <label>Materia<input id="examSubject" value="Física"></label>
+          <label>Programa o carrera<input id="examProgram"></label>
+          <label>Instrucciones<textarea id="examInstructions" rows="3"></textarea></label>
+        </div>
+        <div id="questionEditor"></div>
+        <div class="editor-actions"><button id="saveExamBtn" class="btn primary">Guardar y ver evaluación</button><button id="publishExamBtn" class="btn primary">Publicar en Supabase</button><button id="copyStudentLinkBtn" class="btn secondary">Copiar enlace para alumnos</button><button id="downloadExamBtn" class="btn secondary">Descargar plantilla JSON</button><label class="btn ghost file-btn">Importar JSON<input id="importExamInput" type="file" accept="application/json"></label></div>
+      </section>
+    </section>
+
+    <section id="examView" class="view">
+      <div id="emptyExam" class="empty card"><span>✎</span><h2>Aún no hay una evaluación</h2><p>Crea o importa una desde la pestaña “Crear”.</p><button class="btn primary" data-go="builder">Crear evaluación</button></div>
+      <div id="studentModeBanner" class="student-banner hidden"><span>Modo alumno</span><p>Completa la evaluación y presiona “Entregar evaluación”.</p></div>
+      <form id="studentExam" class="exam-sheet hidden">
+        <header class="exam-header"><div><p id="examDoc" class="eyebrow">Evaluación</p><h1 id="renderTitle"></h1><p id="renderSubject" class="subject"></p><p id="renderProgram"></p></div><div class="mark">AE</div></header>
+        <div class="student-grid"><label>Nombre completo<input id="studentName" required></label><label>Grupo<input id="studentGroup" required></label><label>Fecha<input id="studentDate" type="date" required></label></div>
+        <div id="renderInstructions" class="instructions"></div>
+        <div id="questionList"></div>
+        <div class="submit-bar"><p>Revisa que hayas respondido todo antes de entregar.</p><button class="btn primary" type="submit">Entregar evaluación</button></div>
+      </form>
+      <section id="submissionDone" class="empty card hidden"><span>✓</span><h2>Evaluación entregada</h2><p id="submissionMessage"></p><button id="newResponseBtn" class="btn secondary">Registrar otra respuesta</button></section>
+    </section>
+
+    <section id="resultsView" class="view">
+      <div class="results-head"><div><p class="eyebrow">Seguimiento</p><h1>Resultados</h1><p>Consulta calificaciones y respuestas abiertas.</p></div><div class="action-row"><button id="exportCsvBtn" class="btn primary">Exportar CSV</button><button id="exportJsonBtn" class="btn secondary">Copia de seguridad</button><label class="btn ghost file-btn">Importar resultados<input id="importResultsInput" type="file" accept="application/json"></label></div></div>
+      <div id="stats" class="stats"></div>
+      <div class="card table-card"><div class="table-tools"><input id="resultSearch" type="search" placeholder="Buscar por nombre o grupo..."><button id="clearResultsBtn" class="text-btn danger">Borrar todos</button></div><div class="table-wrap"><table><thead><tr><th>Alumno</th><th>Grupo</th><th>Fecha</th><th>Calificación</th><th></th></tr></thead><tbody id="resultsTable"></tbody></table></div><div id="emptyResults" class="empty small"><p>No hay respuestas registradas todavía.</p></div></div>
+    </section>
+  </main>
+
+  <dialog id="detailDialog"><div class="dialog-head"><div><p class="eyebrow">Detalle de entrega</p><h2 id="detailName"></h2></div><button class="icon-btn" data-close aria-label="Cerrar">×</button></div><div id="detailBody"></div><div class="dialog-actions"><button class="btn secondary" data-close>Cerrar</button></div></dialog>
+  <dialog id="accountDialog"><div class="dialog-head"><div><p class="eyebrow">Acceso docente</p><h2>Conectar con Supabase</h2></div><button class="icon-btn" data-account-close aria-label="Cerrar">×</button></div><form id="accountForm" class="account-form"><p id="supabaseStatus" class="connection-note"></p><label>Correo electrónico<input id="accountEmail" type="email" required autocomplete="email"></label><label>Contraseña<input id="accountPassword" type="password" required minlength="6" autocomplete="current-password"></label><div class="account-actions"><button class="btn primary" type="submit">Iniciar sesión</button><button id="signUpBtn" class="btn secondary" type="button">Crear cuenta</button><button id="signOutBtn" class="btn ghost hidden" type="button">Cerrar sesión</button></div></form></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="config.js"></script>
+  <script src="supabase-service.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
