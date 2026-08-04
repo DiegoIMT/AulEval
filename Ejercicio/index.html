@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="student-mode.css">
   <link rel="stylesheet" href="supabase-ui.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -58,6 +59,7 @@
 
       <section id="editor" class="card editor hidden">
         <div class="card-title"><div><p class="eyebrow">Revisar</p><h2>Editor de evaluación</h2></div><button id="addQuestionBtn" class="btn ghost">+ Agregar pregunta</button></div>
+        <div class="editor-actions sticky-actions"><button id="saveExamBtn" class="btn primary">Guardar y ver evaluación</button><button id="publishExamBtn" class="btn primary">Publicar en Supabase</button><button id="copyStudentLinkBtn" class="btn secondary">Copiar enlace para alumnos</button><button id="showQrBtn" class="btn secondary">Mostrar código QR</button><button id="downloadExamBtn" class="btn secondary">Descargar plantilla JSON</button><label class="btn ghost file-btn">Importar JSON<input id="importExamInput" type="file" accept="application/json"></label></div>
         <div class="meta-grid">
           <label>Título<input id="examTitle" value="Evaluación diagnóstica"></label>
           <label>Materia<input id="examSubject" value="Física"></label>
@@ -65,7 +67,6 @@
           <label>Instrucciones<textarea id="examInstructions" rows="3"></textarea></label>
         </div>
         <div id="questionEditor"></div>
-        <div class="editor-actions"><button id="saveExamBtn" class="btn primary">Guardar y ver evaluación</button><button id="publishExamBtn" class="btn primary">Publicar en Supabase</button><button id="copyStudentLinkBtn" class="btn secondary">Copiar enlace para alumnos</button><button id="downloadExamBtn" class="btn secondary">Descargar plantilla JSON</button><label class="btn ghost file-btn">Importar JSON<input id="importExamInput" type="file" accept="application/json"></label></div>
       </section>
     </section>
 
@@ -91,6 +92,7 @@
 
   <dialog id="detailDialog"><div class="dialog-head"><div><p class="eyebrow">Detalle de entrega</p><h2 id="detailName"></h2></div><button class="icon-btn" data-close aria-label="Cerrar">×</button></div><div id="detailBody"></div><div class="dialog-actions"><button class="btn secondary" data-close>Cerrar</button></div></dialog>
   <dialog id="accountDialog"><div class="dialog-head"><div><p class="eyebrow">Acceso docente</p><h2>Conectar con Supabase</h2></div><button class="icon-btn" data-account-close aria-label="Cerrar">×</button></div><form id="accountForm" class="account-form"><p id="supabaseStatus" class="connection-note"></p><label>Correo electrónico<input id="accountEmail" type="email" required autocomplete="email"></label><label>Contraseña<span class="password-field"><input id="accountPassword" type="password" required minlength="6" autocomplete="current-password"><button id="togglePasswordBtn" type="button" aria-label="Mostrar contraseña" title="Mostrar contraseña"><span class="eye-open" aria-hidden="true">◉</span></button></span></label><div class="account-actions"><button class="btn primary" type="submit">Iniciar sesión</button><button id="signUpBtn" class="btn secondary" type="button">Crear cuenta</button><button id="signOutBtn" class="btn ghost hidden" type="button">Cerrar sesión</button></div></form></dialog>
+  <dialog id="qrDialog" class="qr-dialog"><div class="dialog-head"><div><p class="eyebrow">Acceso para alumnos</p><h2>Código QR de la evaluación</h2></div><button class="icon-btn" data-qr-close aria-label="Cerrar">×</button></div><div class="qr-content"><div id="qrCode" aria-label="Código QR para abrir la evaluación"></div><h3 id="qrExamTitle"></h3><p>Escanea este código con la cámara del celular para abrir la evaluación.</p><input id="qrLink" readonly aria-label="Enlace de la evaluación"></div><div class="dialog-actions"><button id="downloadQrBtn" class="btn primary">Descargar QR</button><button id="copyQrLinkBtn" class="btn secondary">Copiar enlace</button><button class="btn ghost" data-qr-close>Cerrar</button></div></dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="config.js"></script>
   <script src="supabase-service.js"></script>

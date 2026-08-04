@@ -160,6 +160,17 @@ async function copyStudentLink(){
   const link=studentLink();
   try{await navigator.clipboard.writeText(link);toast('Enlace para alumnos copiado')}catch{prompt('Copia este enlace para tus alumnos:',link)}
 }
+function showQr(){
+  if(!exam?.remoteId)return toast('Publica primero la evaluación en Supabase');
+  if(typeof QRCode==='undefined')return toast('No se pudo cargar el generador QR. Revisa tu conexión.');
+  const link=studentLink(),box=$('#qrCode');box.innerHTML='';
+  new QRCode(box,{text:link,width:256,height:256,colorDark:'#17232d',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  $('#qrExamTitle').textContent=exam.title||'Evaluación';$('#qrLink').value=link;$('#qrDialog').showModal();
+}
+function downloadQr(){
+  const source=$('#qrCode canvas')||$('#qrCode img');if(!source)return toast('Primero genera el código QR');
+  const a=document.createElement('a');a.download=`QR-${(exam.title||'evaluacion').replace(/[^a-z0-9áéíóúñ]+/gi,'-')}.png`;a.href=source.tagName==='CANVAS'?source.toDataURL('image/png'):source.src;a.click();
+}
 async function publishExam(){
   if(!AulaEvalDB.configured){$('#accountDialog').showModal();return toast('Configura primero Supabase en config.js')}
   syncEditor();const button=$('#publishExamBtn');button.disabled=true;button.textContent='Publicando...';
@@ -182,7 +193,7 @@ function switchView(name){$$('.view').forEach(v=>v.classList.remove('active'));$
 
 $$('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.view));$$('[data-go]').forEach(b=>b.onclick=()=>switchView(b.dataset.go));$('#sampleBtn').onclick=()=>{$('#sourceText').value=sample;toast('Ejemplo cargado')};$('#parseBtn').onclick=()=>{const raw=$('#sourceText').value.trim();if(!raw)return toast('Pega primero el contenido de la evaluación');exam=parseDocument(raw);renderEditor();$('#editor').scrollIntoView({behavior:'smooth'});toast(`${exam.sections.flatMap(s=>s.questions).length} preguntas detectadas`)};
 $('#examSelector').onchange=e=>selectExam(e.target.value);$('#newExamBtn').onclick=newExam;$('#syncExamsBtn').onclick=syncExams;
-$('#saveExamBtn').onclick=()=>{syncEditor();if(!exam.title)return toast('Escribe un título');save();renderExam();switchView('exam');toast('Evaluación guardada')};$('#publishExamBtn').onclick=publishExam;$('#copyStudentLinkBtn').onclick=copyStudentLink;$('#downloadExamBtn').onclick=()=>{syncEditor();download('evaluacion-aulaeval.json',JSON.stringify(exam,null,2))};$('#addQuestionBtn').onclick=()=>{syncEditor();if(!exam.sections.length)exam.sections.push({id:uid(),label:'SECCIÓN I',title:'General',questions:[]});exam.sections.at(-1).questions.push({id:uid(),text:'Nueva pregunta',type:'open',options:[],correct:'',points:1});renderEditor()};
+$('#saveExamBtn').onclick=()=>{syncEditor();if(!exam.title)return toast('Escribe un título');save();renderExam();switchView('exam');toast('Evaluación guardada')};$('#publishExamBtn').onclick=publishExam;$('#copyStudentLinkBtn').onclick=copyStudentLink;$('#showQrBtn').onclick=showQr;$('#downloadExamBtn').onclick=()=>{syncEditor();download('evaluacion-aulaeval.json',JSON.stringify(exam,null,2))};$('#addQuestionBtn').onclick=()=>{syncEditor();if(!exam.sections.length)exam.sections.push({id:uid(),label:'SECCIÓN I',title:'General',questions:[]});exam.sections.at(-1).questions.push({id:uid(),text:'Nueva pregunta',type:'open',options:[],correct:'',points:1});renderEditor()};
 $('#studentExam').onsubmit=submitExam;$('#newResponseBtn').onclick=()=>renderExam();$('#resultSearch').oninput=e=>renderResults(e.target.value);$('#exportCsvBtn').onclick=csvExport;$('#exportJsonBtn').onclick=()=>download('respaldo-aulaeval.json',JSON.stringify({exam,results,exportedAt:new Date().toISOString()},null,2));$('#clearResultsBtn').onclick=async()=>{if(results.length&&confirm('¿Borrar definitivamente todas las respuestas de esta evaluación?')){try{if(exam?.remoteId)await AulaEvalDB.deleteResults(exam.remoteId);const activeExamId=exam?.remoteId||exam?.id;results=results.filter(r=>r.examId!==activeExamId);save();await renderResults();toast('Resultados eliminados')}catch(err){toast('No se pudieron borrar: '+err.message)}}};
 $('#importExamInput').onchange=e=>importFile(e.target,data=>{exam=data.exam||data;save();renderEditor()});$('#importResultsInput').onchange=e=>importFile(e.target,data=>{const incoming=Array.isArray(data)?data:data.results;if(!Array.isArray(incoming))throw Error();results=[...results,...incoming];save();renderResults()});$$('[data-close]').forEach(b=>b.onclick=()=>$('#detailDialog').close());
 $('#accountBtn').onclick=async()=>{await refreshAccount();$('#accountDialog').showModal()};$$('[data-account-close]').forEach(b=>b.onclick=()=>$('#accountDialog').close());
@@ -190,6 +201,7 @@ $('#togglePasswordBtn').onclick=()=>{const input=$('#accountPassword'),button=$(
 $('#accountForm').onsubmit=async e=>{e.preventDefault();try{await AulaEvalDB.signIn($('#accountEmail').value,$('#accountPassword').value);await refreshAccount();toast('Sesión iniciada');$('#accountDialog').close()}catch(err){toast(err.message)}};
 $('#signUpBtn').onclick=async()=>{try{await AulaEvalDB.signUp($('#accountEmail').value,$('#accountPassword').value);await refreshAccount();toast('Cuenta creada. Revisa tu correo si Supabase pide confirmación.')}catch(err){toast(err.message)}};
 $('#signOutBtn').onclick=async()=>{await AulaEvalDB.signOut();await refreshAccount();toast('Sesión cerrada')};
+$$('[data-qr-close]').forEach(b=>b.onclick=()=>$('#qrDialog').close());$('#downloadQrBtn').onclick=downloadQr;$('#copyQrLinkBtn').onclick=async()=>{try{await navigator.clipboard.writeText($('#qrLink').value);toast('Enlace copiado')}catch{$('#qrLink').select();document.execCommand('copy');toast('Enlace copiado')}};
 
 (async function init(){
   if(studentMode){
