@@ -1,0 +1,57 @@
+/* Valoraciones acumulativas: todos los indicadores anteriores al elegido se activan. */
+.rating-scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rating-scale label {
+  width: auto;
+  height: auto;
+  min-width: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 9px;
+  border-radius: 9px;
+  transition: background .15s, color .15s, transform .15s;
+}
+
+.icon-scale label span {
+  color: #aeb8b2;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.icon-scale label small {
+  font-size: 10px;
+  text-align: center;
+}
+
+.rating-scale label:has(input:checked),
+.rating-scale label:has(~ label input:checked) {
+  color: #fff;
+  background: var(--green);
+  border-color: var(--green);
+  transform: translateY(-1px);
+}
+
+.icon-scale label:has(input:checked) span,
+.icon-scale label:has(~ label input:checked) span { color: #ffd86b; }
+.hearts label:has(input:checked) span,
+.hearts label:has(~ label input:checked) span { color: #ff8c9b; }
+.crowns label:has(input:checked) span,
+.crowns label:has(~ label input:checked) span { color: #ffd45c; }
+.circles label:has(input:checked) span,
+.circles label:has(~ label input:checked) span { color: #a7ead8; }
+
+.rating-scale label:hover,
+.rating-scale label:has(~ label:hover) {
+  background: var(--green2);
+  border-color: var(--green);
+}
+
+@media (max-width: 600px) {
+  .rating-scale { gap: 5px; }
+  .rating-scale label { min-width: 38px; padding: 6px; }
+}
